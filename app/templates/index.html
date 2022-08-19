@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            let isPushEnabled = false
+
+            function requestNotificationPermission() {
+                // Let's check if the browser supports notifications
+                if (!("Notification" in window)) {
+                    console.warn("This browser does not support desktop notification");
+                }
+
+                // Otherwise, we need to ask the user for permission
+                else if (Notification.permission === "default") {
+                    Notification.requestPermission().then(function (permission) {
+                        // If the user accepts, let's create a notification
+                        if (permission === "granted") {
+                            const notification = new Notification("Hi there!", { body: 'This is how you will be notifications.' });
+                        }
+                    });
+                }
+
+                // At last, if the user has denied notifications, and you
+                // want to be respectful there is no need to bother them any more.
+            }
+
+            function sendSubscriptionToServer(subscription) {
+                console.log("Registering subscription", subscription);
+            }
+
+            function showCurlCommand(subscription) {
+                
+            }
+
+            // Resources you should read in order to understand what is happening here:
+            // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
+            if ('serviceWorker' in navigator) {
+                // Register a service worker hosted at the root of the
+                // site using the default scope.
+                navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").then(function(registration) {
+                    console.log('awwww worker registration succeeded:', registration);
+                    // Do we already have a push message subscription?
+                    registration.pushManager.getSubscription()
+                    .then(function(subscription) {
+                        // Enable any UI which subscribes / unsubscribes from
+                        // push messages.
+                        const pushButton = document.querySelector('.js-push-button');
+                        pushButton.disabled = false;
+
+                        if (!subscription) {
+                            // We aren't subscribed to push, so set UI
+                            // to allow the user to enable push
+                            pushButton.addEventListener('click', requestNotificationPermission(registration), false);
+                            return;
+                        }
+
+                        // Keep your server in sync with the latest subscriptionId
+                        sendSubscriptionToServer(subscription);
+
+                        showCurlCommand(subscription);
+
+                        // Set your UI to show they have subscribed for
+                        // push messages
+                        pushButton.textContent = 'Disable Push Messages';
+                        isPushEnabled = true;
+                    })
+                    .catch(function(err) {
+                        console.error('Error during getSubscription()', err);
+                    });
+                }, /*catch*/ function(error) {
+                    console.error('Service worker registration failed:', error);
+                });
+            } else {
+                console.warn('Service workers are not supported.');
+            }
+        </script>
+    </head>
+    <body>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div><button class="js-push-button" disabled="disabled">Enable Push Notifications</button></div>
+        </div>
+    </body>
+</html>
