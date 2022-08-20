@@ -31,7 +31,15 @@
             }
 
             function sendSubscriptionToServer(subscription) {
-                console.log("Registering subscription", subscription);
+                fetch('/push_subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(subscription) })
+                    .then(function (response) {
+                        if (!response.ok) {
+                           console.warn(`HTTP error! Status: ${response.status}`);
+                        }
+                    })
+                    .catch(function (err) {
+                        console.error('Something happened while sending the HTTP request:', err);
+                    })
             }
 
             function showCurlCommand(subscription) {

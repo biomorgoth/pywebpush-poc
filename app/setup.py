@@ -1,5 +1,6 @@
 import json
 import py_vapid
+import secrets
 
 # Included in py_vapid
 from cryptography.hazmat.primitives import serialization
@@ -19,7 +20,8 @@ raw_pub = vapid.public_key.public_bytes(
 )
 
 # Output a .env file to be used on the server
-print("APPLICATION_SERVER_KEY={}\nPRIVATE_KEY={}\nPUBLIC_KEY={}".format(
+print("APPLICATION_SERVER_KEY={}\nPRIVATE_KEY={}\nPUBLIC_KEY={}\nSECRET_KEY={}".format(
     format_string(py_vapid.b64urlencode(raw_pub)),
     format_string(str(vapid.private_pem(), 'utf-8')),
-    format_string(str(vapid.public_pem(), 'utf-8'))))
+    format_string(str(vapid.public_pem(), 'utf-8')),
+    secrets.token_hex()))
