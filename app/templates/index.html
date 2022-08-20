@@ -31,7 +31,19 @@
             }
 
             function sendSubscriptionToServer(subscription) {
-                fetch('/push_subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(subscription) })
+                fetch("{{ url_for('push_subscribe') }}", { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(subscription) })
+                    .then(function (response) {
+                        if (!response.ok) {
+                           console.warn(`HTTP error! Status: ${response.status}`);
+                        }
+                    })
+                    .catch(function (err) {
+                        console.error('Something happened while sending the HTTP request:', err);
+                    })
+            }
+
+            function requestPushMessage() {
+                fetch("{{ url_for('push_send') }}", { method: 'POST' })
                     .then(function (response) {
                         if (!response.ok) {
                            console.warn(`HTTP error! Status: ${response.status}`);
@@ -58,13 +70,13 @@
                     .then(function(subscription) {
                         // Enable any UI which subscribes / unsubscribes from
                         // push messages.
-                        const pushButton = document.querySelector('.js-push-button');
-                        pushButton.disabled = false;
+                        const subscribePushButton = document.querySelector('.js-subscribe-push-button');
+                        subscribePushButton.disabled = false;
 
                         if (!subscription) {
                             // We aren't subscribed to push, so set UI
                             // to allow the user to enable push
-                            pushButton.addEventListener('click', requestNotificationPermission(swRegistration), false);
+                            subscribePushButton.addEventListener('click', requestNotificationPermission(swRegistration), false);
                             return;
                         }
 
@@ -73,9 +85,12 @@
 
                         showCurlCommand(subscription);
 
+                        const sendPushButton = document.querySelector('.js-send-push-button');
+                        sendPushButton.addEventListener('click', requestPushMessage, false);
+
                         // Set your UI to show they have subscribed for
                         // push messages
-                        pushButton.textContent = 'Disable Push Messages';
+                        subscribePushButton.textContent = 'Disable Push Messages';
                         isPushEnabled = true;
                     })
                     .catch(function(err) {
@@ -91,7 +106,8 @@
     </head>
     <body>
         <div style="display: flex; flex-direction: column; align-items: center;">
-            <div><button class="js-push-button" disabled="disabled">Enable Push Notifications</button></div>
+            <div><button class="js-subscribe-push-button" disabled="disabled">Enable Push Notifications</button></div>
+            <div><button class="js-send-push-button">Send Push Notification</button></div>
         </div>
     </body>
 </html>
